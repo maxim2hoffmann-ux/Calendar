@@ -1,0 +1,1051 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Календарь 🌸</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Segoe UI',Roboto,system-ui,sans-serif}
+
+/* ===== ФОН (управляется через JS) ===== */
+body{
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:1rem;
+  color:#fff5f8;
+  position:relative;
+  overflow-x:hidden;
+  background:linear-gradient(135deg,#1a0b2e 0%,#2d1b4e 50%,#1a0b2e 100%);
+  background-size:cover;
+  background-position:center;
+  background-attachment:fixed;
+  background-repeat:no-repeat;
+  transition:background .6s ease;
+}
+body::before{
+  content:'';
+  position:fixed;
+  inset:0;
+  background:linear-gradient(135deg,rgba(26,11,46,.55) 0%,rgba(45,27,78,.4) 50%,rgba(26,11,46,.6) 100%);
+  z-index:0;
+  pointer-events:none;
+  transition:background .6s ease;
+}
+body.light{color:#4a1e5c}
+body.light::before{background:linear-gradient(135deg,rgba(255,228,236,.65) 0%,rgba(224,187,255,.5) 50%,rgba(255,228,236,.65) 100%)}
+
+/* ===== ЛЕПЕСТКИ ===== */
+.petals{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.petals span{position:absolute;display:block;width:14px;height:14px;background:radial-gradient(circle at 30% 30%,#ffb7d5,#ff69b4 60%,transparent 90%);border-radius:50% 0 50% 50%;opacity:.85;top:-20px;animation:fallSakura linear infinite;transform-origin:center;filter:drop-shadow(0 0 4px rgba(255,105,180,.6))}
+@keyframes fallSakura{0%{transform:translateY(-10vh) rotate(0deg) translateX(0);opacity:0}10%{opacity:.9}50%{transform:translateY(50vh) rotate(180deg) translateX(40px)}100%{transform:translateY(110vh) rotate(360deg) translateX(-30px);opacity:0}}
+.petals span:nth-child(1){left:5%;animation-duration:14s;animation-delay:0s}
+.petals span:nth-child(2){left:15%;animation-duration:18s;animation-delay:2s;width:10px;height:10px}
+.petals span:nth-child(3){left:25%;animation-duration:16s;animation-delay:4s;width:16px;height:16px}
+.petals span:nth-child(4){left:35%;animation-duration:20s;animation-delay:1s}
+.petals span:nth-child(5){left:45%;animation-duration:15s;animation-delay:6s;width:12px;height:12px}
+.petals span:nth-child(6){left:55%;animation-duration:19s;animation-delay:3s;width:18px;height:18px}
+.petals span:nth-child(7){left:65%;animation-duration:17s;animation-delay:5s}
+.petals span:nth-child(8){left:75%;animation-duration:21s;animation-delay:2s;width:11px;height:11px}
+.petals span:nth-child(9){left:85%;animation-duration:14s;animation-delay:7s;width:15px;height:15px}
+.petals span:nth-child(10){left:92%;animation-duration:18s;animation-delay:4s}
+
+.stars{position:fixed;inset:0;pointer-events:none;z-index:1;overflow:hidden}
+.stars span{position:absolute;display:block;width:3px;height:3px;background:#fff;border-radius:50%;animation:twinkle 3s ease-in-out infinite;box-shadow:0 0 6px #fff,0 0 12px #ff69b4}
+@keyframes twinkle{0%,100%{opacity:.3;transform:scale(1)}50%{opacity:1;transform:scale(1.5)}}
+.stars span:nth-child(1){left:8%;top:12%;animation-delay:0s}
+.stars span:nth-child(2){left:18%;top:22%;animation-delay:.5s;width:4px;height:4px}
+.stars span:nth-child(3){left:28%;top:8%;animation-delay:1s}
+.stars span:nth-child(4){left:38%;top:18%;animation-delay:1.5s;width:2px;height:2px}
+.stars span:nth-child(5){left:48%;top:28%;animation-delay:.3s}
+.stars span:nth-child(6){left:58%;top:10%;animation-delay:1.2s;width:4px;height:4px}
+.stars span:nth-child(7){left:68%;top:24%;animation-delay:.8s}
+.stars span:nth-child(8){left:78%;top:15%;animation-delay:1.8s;width:2px;height:2px}
+.stars span:nth-child(9){left:88%;top:20%;animation-delay:.4s}
+.stars span:nth-child(10){left:94%;top:8%;animation-delay:1.4s;width:4px;height:4px}
+.stars span:nth-child(11){left:12%;top:78%;animation-delay:.7s}
+.stars span:nth-child(12){left:32%;top:88%;animation-delay:1.1s;width:2px;height:2px}
+.stars span:nth-child(13){left:52%;top:82%;animation-delay:.2s}
+.stars span:nth-child(14){left:72%;top:92%;animation-delay:1.6s;width:3px;height:3px}
+.stars span:nth-child(15){left:90%;top:75%;animation-delay:.9s}
+
+/* ===== КОНТЕЙНЕР ===== */
+.calendar-container{position:relative;z-index:2;background:rgba(20,10,40,.65);backdrop-filter:blur(18px);-webkit-backdrop-filter:blur(18px);border-radius:2.5rem;padding:2rem 1.8rem;border:1px solid rgba(255,105,180,.3);box-shadow:0 25px 50px -10px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,105,180,.2),0 0 60px rgba(255,105,180,.2);width:100%;max-width:580px;transition:all .4s ease}
+body.light .calendar-container{background:rgba(255,255,255,.78);border-color:rgba(255,105,180,.45);box-shadow:0 25px 50px -10px rgba(180,83,140,.25),inset 0 0 0 1px rgba(255,105,180,.25),0 0 60px rgba(255,105,180,.25)}
+
+/* ===== ЧАСЫ ===== */
+.clock-panel{display:flex;align-items:center;justify-content:space-between;gap:1rem;margin-bottom:1.4rem;padding:1rem 1.3rem;background:linear-gradient(135deg,rgba(255,105,180,.15),rgba(124,58,237,.15));border-radius:1.5rem;border:1px solid rgba(255,105,180,.3);box-shadow:inset 0 1px 0 rgba(255,255,255,.1),0 10px 25px -10px rgba(255,105,180,.3)}
+body.light .clock-panel{background:linear-gradient(135deg,rgba(255,182,213,.5),rgba(224,187,255,.5));border-color:rgba(255,105,180,.4)}
+.clock-time{display:flex;align-items:center;font-family:'Courier New',monospace;font-size:2.4rem;font-weight:700;letter-spacing:2px;color:#ff9ec4;line-height:1;text-shadow:0 0 12px rgba(255,105,180,.6)}
+body.light .clock-time{color:#c2185b;text-shadow:0 0 8px rgba(255,105,180,.4)}
+.clock-time .digits{display:inline-block;min-width:2.6rem;text-align:center;padding:.15rem .1rem;border-radius:.5rem;background:rgba(255,105,180,.12);box-shadow:inset 0 -2px 0 rgba(255,105,180,.3),0 0 10px rgba(255,105,180,.2)}
+.clock-time .sep{display:inline-block;width:.9rem;text-align:center;font-size:2rem;opacity:.8;animation:blink 1s steps(1) infinite}
+.clock-time .sep.off{opacity:.2}
+@keyframes blink{0%,50%{opacity:.8}51%,100%{opacity:.15}}
+.clock-time .ampm{font-size:.85rem;margin-left:.5rem;font-weight:500;opacity:.7}
+.clock-date{display:flex;flex-direction:column;align-items:flex-end;gap:.15rem;text-align:right}
+.clock-date .dayname{font-size:.85rem;font-weight:600;letter-spacing:1px;text-transform:uppercase;color:#e0bbff}
+body.light .clock-date .dayname{color:#7c3aed}
+.clock-date .full-date{font-size:.95rem;color:#ffb7d5;opacity:.9}
+body.light .clock-date .full-date{color:#a8368b}
+.clock-date .weekday-num{font-size:.75rem;color:#b794d4;letter-spacing:.5px}
+body.light .clock-date .weekday-num{color:#9333ea}
+
+/* ===== ШАПКА ===== */
+.calendar-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1.2rem;padding:0 .5rem;gap:.5rem;flex-wrap:wrap}
+.month-year{font-size:1.7rem;font-weight:700;letter-spacing:1px;background:linear-gradient(to right,#ff69b4,#c084fc,#ff69b4);background-size:200% auto;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;white-space:nowrap;animation:shimmer 4s linear infinite;filter:drop-shadow(0 0 8px rgba(255,105,180,.4))}
+@keyframes shimmer{to{background-position:200% center}}
+.nav-buttons{display:flex;gap:.5rem;align-items:center;flex-wrap:wrap}
+.nav-btn{background:rgba(255,105,180,.15);border:1px solid rgba(255,105,180,.3);min-width:2.5rem;height:2.5rem;padding:0 .7rem;border-radius:1.5rem;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#ffb7d5;font-size:1.1rem;font-weight:600;transition:all .25s ease;box-shadow:0 4px 12px rgba(255,105,180,.2);user-select:none;backdrop-filter:blur(6px)}
+.nav-btn:hover{background:rgba(255,105,180,.35);transform:scale(1.08) translateY(-2px);color:#fff;box-shadow:0 8px 20px rgba(255,105,180,.5)}
+.nav-btn:active{transform:scale(.95)}
+body.light .nav-btn{background:rgba(255,105,180,.2);color:#a8368b;border-color:rgba(255,105,180,.4)}
+body.light .nav-btn:hover{background:rgba(255,105,180,.4);color:#4a1e5c}
+.today-btn{font-size:.9rem;padding:0 1rem}
+.export-btn,.import-btn{font-size:1rem;padding:0 .7rem;min-width:2.5rem}
+.theme-btn{font-size:1.2rem;padding:0 .8rem}
+.notify-btn{font-size:1.1rem;padding:0 .8rem}
+.notify-btn.on{background:rgba(255,105,180,.45);border-color:rgba(255,105,180,.7);color:#fff;box-shadow:0 0 15px rgba(255,105,180,.6)}
+.shift-btn{font-size:.85rem;padding:0 .9rem;background:rgba(255,77,109,.2);border-color:rgba(255,77,109,.4);color:#ff8ca3}
+.shift-btn:hover{background:rgba(255,77,109,.45);color:#fff}
+.shift-btn.on{background:rgba(255,77,109,.45);border-color:rgba(255,77,109,.7);color:#fff;box-shadow:0 0 15px rgba(255,77,109,.6)}
+body.light .shift-btn{background:rgba(220,38,38,.15);border-color:rgba(220,38,38,.4);color:#b91c1c}
+body.light .shift-btn.on{background:rgba(220,38,38,.4);color:#fff}
+.bg-btn{font-size:1.1rem;padding:0 .8rem}
+
+/* ===== СЕТКА ===== */
+.weekdays{display:grid;grid-template-columns:repeat(7,1fr);text-align:center;margin-bottom:.6rem;font-weight:600;color:#e0bbff;font-size:.9rem;letter-spacing:.5px;text-transform:uppercase;opacity:.95;text-shadow:0 0 8px rgba(192,132,252,.5)}
+body.light .weekdays{color:#7c3aed;text-shadow:none}
+.calendar-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:.35rem}
+.day-cell{aspect-ratio:1/1;display:flex;flex-direction:column;align-items:center;justify-content:center;border-radius:1rem;font-size:1.05rem;font-weight:600;color:#fff5f8;background:rgba(255,105,180,.06);transition:all .25s ease;border:1px solid rgba(255,105,180,.1);position:relative;cursor:pointer;overflow:hidden}
+.day-cell:not(.empty):hover{background:rgba(255,105,180,.25);transform:translateY(-3px) scale(1.03);border-color:rgba(255,105,180,.5);box-shadow:0 8px 20px rgba(255,105,180,.4)}
+body.light .day-cell{color:#4a1e5c;background:rgba(255,255,255,.6);border-color:rgba(255,105,180,.15)}
+body.light .day-cell:not(.empty):hover{background:rgba(255,182,213,.5)}
+.empty{background:transparent;box-shadow:none;border:none;opacity:.15;cursor:default}
+.empty:hover{transform:none !important;background:transparent !important}
+.today{background:linear-gradient(135deg,#ff69b4,#c084fc) !important;color:#fff !important;font-weight:800;box-shadow:0 0 0 2px rgba(255,255,255,.4),0 8px 25px rgba(255,105,180,.7),0 0 30px rgba(192,132,252,.5) !important;border:1px solid #ffb7d5 !important;animation:todayPulse 2s ease-in-out infinite}
+@keyframes todayPulse{0%,100%{box-shadow:0 0 0 2px rgba(255,255,255,.4),0 8px 25px rgba(255,105,180,.7),0 0 30px rgba(192,132,252,.5)}50%{box-shadow:0 0 0 3px rgba(255,255,255,.6),0 8px 30px rgba(255,105,180,.9),0 0 45px rgba(192,132,252,.8)}}
+body.light .today{color:#fff !important}
+.weekend{color:#ff8cc4}
+body.light .weekend{color:#db2777}
+.today.weekend{color:#fff}
+.holiday{color:#ff4d6d;font-weight:800;text-shadow:0 0 8px rgba(255,77,109,.5)}
+.holiday:hover{background:rgba(255,77,109,.3) !important}
+body.light .holiday{color:#dc2626;text-shadow:0 0 6px rgba(220,38,38,.3)}
+
+.day-cell.shift{background:linear-gradient(135deg,rgba(255,77,109,.35),rgba(192,132,252,.25)) !important;border:1px solid rgba(255,77,109,.6) !important;box-shadow:0 0 15px rgba(255,77,109,.4) !important}
+.day-cell.shift::before{content:'🔥';position:absolute;top:2px;right:3px;font-size:.65rem;opacity:.9}
+.day-cell.shift.today{background:linear-gradient(135deg,#ff69b4,#c084fc) !important}
+body.light .day-cell.shift{background:linear-gradient(135deg,rgba(255,140,160,.5),rgba(255,182,213,.5)) !important;border-color:rgba(220,38,38,.5) !important}
+.shift-info{margin-top:.8rem;padding:.6rem .9rem;background:linear-gradient(135deg,rgba(255,77,109,.15),rgba(192,132,252,.1));border-radius:.9rem;border:1px solid rgba(255,77,109,.3);font-size:.85rem;color:#ff8ca3;text-align:center}
+body.light .shift-info{background:linear-gradient(135deg,rgba(255,140,160,.3),rgba(255,182,213,.3));color:#b91c1c;border-color:rgba(220,38,38,.3)}
+.shift-info strong{color:#ff4d6d}
+body.light .shift-info strong{color:#991b1b}
+
+.event-dot{position:absolute;bottom:6px;left:50%;transform:translateX(-50%);width:6px;height:6px;border-radius:50%;background:#ff69b4;box-shadow:0 0 8px #ff69b4,0 0 12px #ff69b4}
+.today .event-dot{background:#fff;box-shadow:0 0 8px #fff}
+.footer-note{text-align:center;margin-top:1rem;color:#ffb7d5;font-size:.75rem;letter-spacing:.5px;opacity:.85}
+body.light .footer-note{color:#a8368b}
+
+/* ===== БЛИЖАЙШИЕ / СЧЁТЧИК ===== */
+.upcoming{margin-top:1.2rem;background:linear-gradient(135deg,rgba(255,105,180,.08),rgba(124,58,237,.08));border-radius:1.2rem;padding:1rem 1.1rem;border:1px solid rgba(255,105,180,.2)}
+body.light .upcoming{background:linear-gradient(135deg,rgba(255,182,213,.4),rgba(224,187,255,.4));border-color:rgba(255,105,180,.3)}
+.upcoming h3{font-size:.85rem;font-weight:700;color:#ff9ec4;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.7rem;opacity:.95;display:flex;align-items:center;gap:.4rem;text-shadow:0 0 10px rgba(255,105,180,.5)}
+.upcoming h3::before{content:'✿';color:#ff69b4;font-size:1rem}
+body.light .upcoming h3{color:#a8368b;text-shadow:none}
+.upcoming-list{display:flex;flex-direction:column;gap:.4rem;max-height:180px;overflow-y:auto}
+.upcoming-item{display:flex;align-items:baseline;gap:.6rem;padding:.45rem .6rem;border-radius:.7rem;cursor:pointer;transition:all .2s;font-size:.9rem;color:#ffe4ec}
+.upcoming-item:hover{background:rgba(255,105,180,.2);transform:translateX(4px)}
+body.light .upcoming-item{color:#4a1e5c}
+.upcoming-date{color:#ff69b4;font-weight:700;flex-shrink:0;min-width:3.2rem;font-size:.85rem}
+body.light .upcoming-date{color:#c2185b}
+.upcoming-text{flex:1;word-break:break-word;line-height:1.3}
+.upcoming-empty{color:#b794d4;font-size:.85rem;text-align:center;padding:.5rem;font-style:italic}
+body.light .upcoming-empty{color:#a8368b}
+.countdown{margin-top:1rem;padding:1rem 1.1rem;background:linear-gradient(135deg,rgba(192,132,252,.1),rgba(255,105,180,.1));border-radius:1.2rem;border:1px solid rgba(192,132,252,.25)}
+body.light .countdown{background:linear-gradient(135deg,rgba(224,187,255,.5),rgba(255,182,213,.5));border-color:rgba(192,132,252,.35)}
+.countdown h3{font-size:.85rem;font-weight:700;color:#c084fc;text-transform:uppercase;letter-spacing:1.5px;margin-bottom:.7rem;opacity:.95;display:flex;align-items:center;gap:.4rem;text-shadow:0 0 10px rgba(192,132,252,.5)}
+.countdown h3::before{content:'✧';color:#c084fc;font-size:1rem}
+body.light .countdown h3{color:#7c3aed;text-shadow:none}
+.countdown-list{display:flex;flex-direction:column;gap:.4rem}
+.countdown-item{display:flex;align-items:center;justify-content:space-between;gap:.6rem;padding:.4rem .6rem;border-radius:.7rem;font-size:.9rem;color:#ffe4ec;background:rgba(255,105,180,.06)}
+body.light .countdown-item{color:#4a1e5c;background:rgba(255,255,255,.5)}
+.countdown-label{flex:1;word-break:break-word}
+.countdown-value{color:#ff69b4;font-weight:800;white-space:nowrap;font-variant-numeric:tabular-nums}
+body.light .countdown-value{color:#c2185b}
+.countdown-value.soon{color:#ff4d6d}
+body.light .countdown-value.soon{color:#dc2626}
+.countdown-value.today{color:#34d399}
+body.light .countdown-value.today{color:#059669}
+
+/* ===== МОДАЛЬНЫЕ ===== */
+.modal-overlay{position:fixed;inset:0;background:rgba(26,11,46,.75);backdrop-filter:blur(10px);display:none;align-items:center;justify-content:center;z-index:100;padding:1rem}
+.modal-overlay.active{display:flex}
+.modal{background:linear-gradient(145deg,rgba(45,27,78,.95),rgba(26,11,46,.95));border-radius:1.5rem;padding:1.6rem;width:100%;max-width:420px;border:1px solid rgba(255,105,180,.3);box-shadow:0 25px 50px rgba(0,0,0,.7),inset 0 0 0 1px rgba(255,105,180,.15),0 0 40px rgba(255,105,180,.25);color:#fff5f8;animation:pop .3s ease-out;backdrop-filter:blur(15px)}
+body.light .modal{background:linear-gradient(145deg,rgba(255,255,255,.95),rgba(255,228,236,.95));color:#4a1e5c;border-color:rgba(255,105,180,.4)}
+@keyframes pop{from{transform:scale(.9);opacity:0}to{transform:scale(1);opacity:1}}
+.modal h3{font-size:1.2rem;margin-bottom:1rem;font-weight:700;color:#ff9ec4;text-shadow:0 0 10px rgba(255,105,180,.4)}
+body.light .modal h3{color:#c2185b;text-shadow:none}
+.modal textarea{width:100%;min-height:90px;padding:.8rem;border-radius:.9rem;border:1px solid rgba(255,105,180,.3);background:rgba(26,11,46,.7);color:#fff5f8;font-size:1rem;font-family:inherit;resize:vertical;outline:none}
+body.light .modal textarea{background:rgba(255,255,255,.9);color:#4a1e5c;border-color:rgba(255,105,180,.4)}
+.modal textarea:focus{border-color:#ff69b4;box-shadow:0 0 15px rgba(255,105,180,.5)}
+.modal-buttons{display:flex;gap:.6rem;margin-top:1rem;justify-content:flex-end}
+.modal-btn{padding:.6rem 1.2rem;border-radius:.8rem;border:none;cursor:pointer;font-size:.95rem;font-weight:600;transition:all .2s}
+.btn-primary{background:linear-gradient(135deg,#ff69b4,#c084fc);color:#fff;box-shadow:0 4px 15px rgba(255,105,180,.5)}
+.btn-primary:hover{background:linear-gradient(135deg,#ff8cc4,#d4a8ff);transform:translateY(-2px);box-shadow:0 8px 25px rgba(255,105,180,.7)}
+.btn-secondary{background:rgba(255,105,180,.15);color:#ffc9de;border:1px solid rgba(255,105,180,.3)}
+.btn-secondary:hover{background:rgba(255,105,180,.3)}
+body.light .btn-secondary{background:rgba(255,105,180,.2);color:#a8368b;border-color:rgba(255,105,180,.4)}
+.event-list{margin-bottom:1rem;max-height:150px;overflow-y:auto}
+.event-item{display:flex;align-items:center;justify-content:space-between;gap:.5rem;padding:.5rem .7rem;background:rgba(255,105,180,.12);border-radius:.7rem;margin-bottom:.4rem;font-size:.9rem;border:1px solid rgba(255,105,180,.15)}
+body.light .event-item{background:rgba(255,182,213,.4);border-color:rgba(255,105,180,.3);color:#4a1e5c}
+.event-item span{flex:1;word-break:break-word}
+.event-del{background:transparent;border:none;color:#ff8cc4;cursor:pointer;font-size:1.3rem;line-height:1;padding:0 .3rem;border-radius:.4rem;transition:all .2s}
+.event-del:hover{background:rgba(255,77,109,.3);color:#fff;transform:scale(1.15)}
+.no-events{color:#b794d4;font-size:.85rem;text-align:center;padding:.4rem;font-style:italic}
+.shift-status{font-size:.9rem;padding:.5rem .7rem;border-radius:.7rem;margin-bottom:.6rem;text-align:center;font-weight:600}
+.shift-status.on{background:rgba(255,77,109,.25);color:#ff8ca3;border:1px solid rgba(255,77,109,.5)}
+.shift-status.off{background:rgba(52,211,153,.15);color:#6ee7b7;border:1px solid rgba(52,211,153,.3)}
+body.light .shift-status.on{background:rgba(220,38,38,.15);color:#b91c1c;border-color:rgba(220,38,38,.4)}
+body.light .shift-status.off{background:rgba(34,197,94,.15);color:#15803d;border-color:rgba(34,197,94,.4)}
+
+/* Настройки смен */
+.shift-settings{padding:.5rem}
+.shift-settings label{display:block;margin-bottom:.4rem;font-size:.9rem;opacity:.9;font-weight:500}
+.shift-settings select,.shift-settings input[type=date]{width:100%;padding:.7rem;border-radius:.8rem;border:1px solid rgba(255,105,180,.3);background:rgba(26,11,46,.7);color:#fff5f8;font-size:1rem;font-family:inherit;outline:none;margin-bottom:.9rem}
+body.light .shift-settings select,body.light .shift-settings input[type=date]{background:rgba(255,255,255,.9);color:#4a1e5c;border-color:rgba(255,105,180,.4)}
+.shift-settings select:focus,.shift-settings input[type=date]:focus{border-color:#ff69b4;box-shadow:0 0 12px rgba(255,105,180,.4)}
+.shift-settings .hint{font-size:.75rem;color:#b794d4;font-style:italic;margin-bottom:1rem}
+body.light .shift-settings .hint{color:#a8368b}
+
+/* Галерея фонов */
+.bg-gallery{display:grid;grid-template-columns:repeat(3,1fr);gap:.6rem;margin-bottom:1rem}
+.bg-option{aspect-ratio:16/10;border-radius:.8rem;background-size:cover;background-position:center;cursor:pointer;border:2px solid rgba(255,105,180,.3);transition:all .2s;position:relative;overflow:hidden}
+.bg-option:hover{transform:scale(1.05);border-color:#ff69b4;box-shadow:0 8px 20px rgba(255,105,180,.5)}
+.bg-option.active{border-color:#ff69b4;box-shadow:0 0 0 2px rgba(255,105,180,.5),0 0 20px rgba(255,105,180,.6)}
+.bg-option.active::after{content:'✓';position:absolute;top:4px;right:4px;background:#ff69b4;color:#fff;width:20px;height:20px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.7rem;font-weight:800}
+.bg-option.none{background:linear-gradient(135deg,#1a0b2e,#2d1b4e,#4a1e5c);display:flex;align-items:center;justify-content:center;color:#ff9ec4;font-size:.75rem;font-weight:600;text-align:center;padding:.3rem}
+.bg-custom-label{font-size:.85rem;font-weight:600;margin-bottom:.4rem;display:block;opacity:.9}
+.bg-custom-input{width:100%;padding:.7rem;border-radius:.8rem;border:1px solid rgba(255,105,180,.3);background:rgba(26,11,46,.7);color:#fff5f8;font-size:.9rem;font-family:inherit;outline:none;margin-bottom:.5rem}
+body.light .bg-custom-input{background:rgba(255,255,255,.9);color:#4a1e5c;border-color:rgba(255,105,180,.4)}
+.bg-custom-input:focus{border-color:#ff69b4;box-shadow:0 0 12px rgba(255,105,180,.4)}
+
+@media (max-width:480px){
+  .clock-panel{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .clock-date{align-items:flex-start;text-align:left}
+  .clock-time{font-size:2rem}
+  .bg-gallery{grid-template-columns:repeat(2,1fr)}
+}
+</style>
+</head>
+<body>
+
+<div class="petals">
+  <span></span><span></span><span></span><span></span><span></span>
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="stars">
+  <span></span><span></span><span></span><span></span><span></span>
+  <span></span><span></span><span></span><span></span><span></span>
+  <span></span><span></span><span></span><span></span><span></span>
+</div>
+
+<div class="calendar-container">
+
+<div class="clock-panel" id="clockPanel">
+  <div class="clock-time" id="clockTime">
+    <span class="digits" id="hh">00</span>
+    <span class="sep" id="sep1">:</span>
+    <span class="digits" id="mm">00</span>
+    <span class="sep" id="sep2">:</span>
+    <span class="digits" id="ss">00</span>
+    <span class="ampm" id="ampm"></span>
+  </div>
+  <div class="clock-date">
+    <div class="dayname" id="clockDayName">—</div>
+    <div class="full-date" id="clockFullDate">—</div>
+    <div class="weekday-num" id="clockWeekdayNum">—</div>
+  </div>
+</div>
+
+<div class="calendar-header">
+<div class="month-year" id="monthYearDisplay">Месяц Год</div>
+<div class="nav-buttons">
+<button class="nav-btn today-btn" id="todayBtn">Сегодня</button>
+<button class="nav-btn shift-btn" id="shiftBtn" title="Настроить смены">🔥</button>
+<button class="nav-btn bg-btn" id="bgBtn" title="Сменить фон">🎨</button>
+<button class="nav-btn export-btn" id="exportBtn" title="Скачать резервную копию">💾</button>
+<button class="nav-btn import-btn" id="importBtn" title="Восстановить из файла">📥</button>
+<button class="nav-btn theme-btn" id="themeBtn" title="Сменить тему">🌙</button>
+<button class="nav-btn notify-btn" id="notifyBtn" title="Напоминания">🔔</button>
+<button class="nav-btn" id="prevBtn">←</button>
+<button class="nav-btn" id="nextBtn">→</button>
+</div>
+</div>
+<div class="weekdays">
+<span>Пн</span><span>Вт</span><span>Ср</span><span>Чт</span><span>Пт</span><span>Сб</span><span>Вс</span>
+</div>
+<div class="calendar-grid" id="calendarGrid"></div>
+<div class="shift-info" id="shiftInfo" style="display:none"></div>
+<div class="footer-note">✿ клик по дню — добавить событие ✿</div>
+<div class="upcoming">
+<h3>Ближайшие события</h3>
+<div class="upcoming-list" id="upcomingList"></div>
+</div>
+<div class="countdown">
+<h3>Сколько осталось</h3>
+<div class="countdown-list" id="countdownList"></div>
+</div>
+</div>
+
+<!-- Модальное: события -->
+<div class="modal-overlay" id="modalOverlay">
+<div class="modal">
+<h3 id="modalTitle">События</h3>
+<div id="shiftStatusInModal"></div>
+<div class="event-list" id="eventList"></div>
+<textarea id="eventInput" placeholder="Например: стоматолог в 15:00"></textarea>
+<div class="modal-buttons">
+<button class="modal-btn btn-secondary" id="cancelBtn">Закрыть</button>
+<button class="modal-btn btn-primary" id="saveBtn">Добавить</button>
+</div>
+</div>
+</div>
+
+<!-- Модальное: смены -->
+<div class="modal-overlay" id="shiftOverlay">
+<div class="modal">
+<div class="shift-settings">
+<h3>🔥 Настройки смен</h3>
+<label for="shiftPattern">График</label>
+<select id="shiftPattern">
+<option value="1/3">1/3 — сутки через трое (пожарные)</option>
+<option value="1/2">1/2 — сутки через двое</option>
+<option value="2/2">2/2 — два через два</option>
+<option value="5/2">5/2 — пятидневка</option>
+<option value="off">Отключить</option>
+</select>
+<label for="shiftStart">Дата первой смены</label>
+<input type="date" id="shiftStart">
+<div class="hint">Например: первое дежурство 1 января — выбери 01.01.</div>
+<div class="modal-buttons">
+<button class="modal-btn btn-secondary" id="shiftCancel">Отмена</button>
+<button class="modal-btn btn-primary" id="shiftSave">Сохранить</button>
+</div>
+</div>
+</div>
+</div>
+
+<!-- Модальное: галерея фонов -->
+<div class="modal-overlay" id="bgOverlay">
+<div class="modal">
+<h3>🎨 Выбор фона</h3>
+<div class="bg-gallery" id="bgGallery"></div>
+<label class="bg-custom-label" for="bgCustomInput">Свой URL картинки</label>
+<input class="bg-custom-input" type="text" id="bgCustomInput" placeholder="https://example.com/image.jpg">
+<div class="hint">Правой кнопкой на картинку в интернете → «Копировать адрес изображения».</div>
+<div class="modal-buttons">
+<button class="modal-btn btn-secondary" id="bgCancel">Закрыть</button>
+<button class="modal-btn btn-primary" id="bgApply">Применить URL</button>
+</div>
+</div>
+</div>
+
+<script>
+(function(){
+  var today = new Date();
+  var currentYear = today.getFullYear();
+  var currentMonth = today.getMonth();
+  var currentDay = today.getDate();
+  var displayYear = currentYear;
+  var displayMonth = currentMonth;
+
+  var events = {};
+  try {
+    var saved = localStorage.getItem('calendar_events');
+    if (saved) events = JSON.parse(saved);
+  } catch(e){ events = {}; }
+
+  var shiftConfig = { pattern: 'off', start: '' };
+  try {
+    var savedShift = localStorage.getItem('calendar_shift');
+    if (savedShift) shiftConfig = JSON.parse(savedShift);
+  } catch(e){}
+
+  // ===== ГАЛЕРЕЯ ФОНОВ =====
+  var BG_PRESETS = [
+    { id: 'night-city', name: 'Ночной город', url: 'https://images.unsplash.com/photo-1542051841857-5f90071e7989?w=1920&q=80' },
+    { id: 'sunset',     name: 'Закат',        url: 'https://images.unsplash.com/photo-1495616811223-4d98c6e9c869?w=1920&q=80' },
+    { id: 'sakura',     name: 'Сакура',       url: 'https://images.unsplash.com/photo-1522383225653-ed111181a951?w=1920&q=80' },
+    { id: 'stars',      name: 'Звёзды',       url: 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?w=1920&q=80' },
+    { id: 'anime-sky',  name: 'Небо аниме',   url: 'https://images.unsplash.com/photo-1505144808419-1957a94ca61e?w=1920&q=80' },
+    { id: 'none',       name: 'Без фона',     url: '' }
+  ];
+
+  var bgConfig = { id: 'night-city', url: BG_PRESETS[0].url };
+  try {
+    var savedBg = localStorage.getItem('calendar_bg');
+    if (savedBg) bgConfig = JSON.parse(savedBg);
+  } catch(e){}
+
+  function applyBg(){
+    if (bgConfig.url){
+      document.body.style.backgroundImage = "url('" + bgConfig.url + "')";
+      document.body.style.backgroundSize = 'cover';
+      document.body.style.backgroundPosition = 'center';
+      document.body.style.backgroundAttachment = 'fixed';
+      document.body.style.backgroundRepeat = 'no-repeat';
+    } else {
+      document.body.style.backgroundImage = 'linear-gradient(135deg,#1a0b2e 0%,#2d1b4e 50%,#1a0b2e 100%)';
+    }
+    saveBg();
+  }
+  function saveBg(){
+    try { localStorage.setItem('calendar_bg', JSON.stringify(bgConfig)); } catch(e){}
+  }
+
+  var SHIFT_PATTERNS = {
+    '1/3': { work: 1, rest: 3, name: 'Сутки через трое' },
+    '1/2': { work: 1, rest: 2, name: 'Сутки через двое' },
+    '2/2': { work: 2, rest: 2, name: 'Два через два' },
+    '5/2': { work: 5, rest: 2, name: 'Пятидневка' }
+  };
+
+  function saveEvents(){
+    try { localStorage.setItem('calendar_events', JSON.stringify(events)); } catch(e){}
+  }
+  function saveShift(){
+    try { localStorage.setItem('calendar_shift', JSON.stringify(shiftConfig)); } catch(e){}
+  }
+  function dateKey(y, m, d){
+    return y + '-' + String(m+1).padStart(2,'0') + '-' + String(d).padStart(2,'0');
+  }
+
+  function isShiftDay(y, m, d){
+    if (shiftConfig.pattern === 'off' || !shiftConfig.start) return false;
+    var pat = SHIFT_PATTERNS[shiftConfig.pattern];
+    if (!pat) return false;
+    var sp = shiftConfig.start.split('-');
+    var startDate = new Date(parseInt(sp[0]), parseInt(sp[1]) - 1, parseInt(sp[2]));
+    var curDate = new Date(y, m, d);
+    var diffDays = Math.round((curDate - startDate) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) return false;
+    var cycle = pat.work + pat.rest;
+    return (diffDays % cycle) < pat.work;
+  }
+
+  var monthYearDisplay = document.getElementById('monthYearDisplay');
+  var calendarGrid = document.getElementById('calendarGrid');
+  var prevBtn = document.getElementById('prevBtn');
+  var nextBtn = document.getElementById('nextBtn');
+  var todayBtn = document.getElementById('todayBtn');
+  var exportBtn = document.getElementById('exportBtn');
+  var importBtn = document.getElementById('importBtn');
+  var themeBtn = document.getElementById('themeBtn');
+  var notifyBtn = document.getElementById('notifyBtn');
+  var shiftBtn = document.getElementById('shiftBtn');
+  var bgBtn = document.getElementById('bgBtn');
+  var shiftInfo = document.getElementById('shiftInfo');
+  var modalOverlay = document.getElementById('modalOverlay');
+  var modalTitle = document.getElementById('modalTitle');
+  var eventList = document.getElementById('eventList');
+  var eventInput = document.getElementById('eventInput');
+  var saveBtn = document.getElementById('saveBtn');
+  var cancelBtn = document.getElementById('cancelBtn');
+  var upcomingList = document.getElementById('upcomingList');
+  var countdownList = document.getElementById('countdownList');
+  var clockPanel = document.getElementById('clockPanel');
+  var clockHH = document.getElementById('hh');
+  var clockMM = document.getElementById('mm');
+  var clockSS = document.getElementById('ss');
+  var clockSep1 = document.getElementById('sep1');
+  var clockSep2 = document.getElementById('sep2');
+  var clockAMPM = document.getElementById('ampm');
+  var clockDayName = document.getElementById('clockDayName');
+  var clockFullDate = document.getElementById('clockFullDate');
+  var clockWeekdayNum = document.getElementById('clockWeekdayNum');
+  var shiftStatusInModal = document.getElementById('shiftStatusInModal');
+
+  var shiftOverlay = document.getElementById('shiftOverlay');
+  var shiftPatternSelect = document.getElementById('shiftPattern');
+  var shiftStartInput = document.getElementById('shiftStart');
+  var shiftCancel = document.getElementById('shiftCancel');
+  var shiftSave = document.getElementById('shiftSave');
+
+  var bgOverlay = document.getElementById('bgOverlay');
+  var bgGallery = document.getElementById('bgGallery');
+  var bgCustomInput = document.getElementById('bgCustomInput');
+  var bgCancel = document.getElementById('bgCancel');
+  var bgApply = document.getElementById('bgApply');
+
+  var monthNames = ['Январь','Февраль','Март','Апрель','Май','Июнь','Июль','Август','Сентябрь','Октябрь','Ноябрь','Декабрь'];
+  var monthShort = ['янв','фев','мар','апр','мая','июн','июл','авг','сен','окт','ноя','дек'];
+  var monthNamesRuFull = ['января','февраля','марта','апреля','мая','июня','июля','августа','сентября','октября','ноября','декабря'];
+  var dayNamesRu = ['воскресенье','понедельник','вторник','среда','четверг','пятница','суббота'];
+  var activeDateKey = null;
+
+  var holidays = {
+    '1-1':'Новый год','1-2':'Новогодние каникулы','1-3':'Новогодние каникулы','1-4':'Новогодние каникулы','1-5':'Новогодние каникулы','1-6':'Новогодние каникулы','1-7':'Рождество Христово','1-8':'Новогодние каникулы',
+    '2-23':'День защитника Отечества','3-8':'Международный женский день','5-1':'Праздник Весны и Труда','5-9':'День Победы','6-12':'День России','11-4':'День народного единства'
+  };
+  function getHoliday(y, m, d){ return holidays[(m+1)+'-'+d] || null; }
+
+  var countdownTargets = [
+    { label: '🌸 Новый год', month: 1, day: 1, recurring: true }
+  ];
+
+  function applyTheme(theme){
+    if (theme === 'light'){ document.body.classList.add('light'); themeBtn.textContent = '☀️'; }
+    else { document.body.classList.remove('light'); themeBtn.textContent = '🌙'; }
+  }
+  function loadTheme(){
+    var saved = 'dark';
+    try { saved = localStorage.getItem('calendar_theme') || 'dark'; } catch(e){}
+    applyTheme(saved);
+  }
+  function toggleTheme(){
+    var isLight = document.body.classList.contains('light');
+    var newTheme = isLight ? 'dark' : 'light';
+    try { localStorage.setItem('calendar_theme', newTheme); } catch(e){}
+    applyTheme(newTheme);
+  }
+  themeBtn.addEventListener('click', toggleTheme);
+
+  // ===== ГАЛЕРЕЯ ФОНОВ =====
+  function renderBgGallery(){
+    bgGallery.innerHTML = '';
+    BG_PRESETS.forEach(function(preset){
+      var opt = document.createElement('div');
+      opt.className = 'bg-option' + (bgConfig.id === preset.id ? ' active' : '');
+      if (preset.url){
+        opt.style.backgroundImage = "url('" + preset.url + "')";
+      } else {
+        opt.classList.add('none');
+        opt.textContent = 'Без фона';
+      }
+      opt.title = preset.name;
+      opt.addEventListener('click', function(){
+        bgConfig = { id: preset.id, url: preset.url };
+        applyBg();
+        renderBgGallery();
+      });
+      bgGallery.appendChild(opt);
+    });
+  }
+
+  bgBtn.addEventListener('click', function(){
+    bgCustomInput.value = (bgConfig.id === 'custom') ? bgConfig.url : '';
+    renderBgGallery();
+    bgOverlay.classList.add('active');
+  });
+
+  bgCancel.addEventListener('click', function(){
+    bgOverlay.classList.remove('active');
+  });
+
+  bgApply.addEventListener('click', function(){
+    var url = bgCustomInput.value.trim();
+    if (!url){
+      alert('Вставь URL картинки.');
+      return;
+    }
+    bgConfig = { id: 'custom', url: url };
+    applyBg();
+    renderBgGallery();
+    bgOverlay.classList.remove('active');
+  });
+
+  bgOverlay.addEventListener('click', function(e){
+    if (e.target === bgOverlay) bgOverlay.classList.remove('active');
+  });
+
+  // ===== СМЕНЫ =====
+  function updateShiftBtn(){
+    if (shiftConfig.pattern !== 'off' && shiftConfig.start){
+      shiftBtn.classList.add('on');
+      shiftBtn.title = 'Смены: ' + SHIFT_PATTERNS[shiftConfig.pattern].name;
+    } else {
+      shiftBtn.classList.remove('on');
+      shiftBtn.title = 'Настроить смены';
+    }
+  }
+
+  shiftBtn.addEventListener('click', function(){
+    shiftPatternSelect.value = shiftConfig.pattern || 'off';
+    shiftStartInput.value = shiftConfig.start || '';
+    shiftOverlay.classList.add('active');
+  });
+
+  shiftCancel.addEventListener('click', function(){
+    shiftOverlay.classList.remove('active');
+  });
+
+  shiftSave.addEventListener('click', function(){
+    var pat = shiftPatternSelect.value;
+    var start = shiftStartInput.value;
+    if (pat !== 'off' && !start){ alert('Укажи дату первой смены.'); return; }
+    shiftConfig.pattern = pat;
+    shiftConfig.start = start;
+    saveShift();
+    updateShiftBtn();
+    renderCalendar();
+    shiftOverlay.classList.remove('active');
+  });
+
+  shiftOverlay.addEventListener('click', function(e){
+    if (e.target === shiftOverlay) shiftOverlay.classList.remove('active');
+  });
+
+  // ===== УВЕДОМЛЕНИЯ =====
+  var notificationsEnabled = false;
+  try { notificationsEnabled = localStorage.getItem('calendar_notify') === 'on'; } catch(e){}
+
+  function updateNotifyBtn(){
+    if (notificationsEnabled && ('Notification' in window) && Notification.permission === 'granted'){
+      notifyBtn.classList.add('on');
+      notifyBtn.textContent = '🔔';
+    } else {
+      notifyBtn.classList.remove('on');
+      notifyBtn.textContent = '🔕';
+    }
+  }
+
+  function enableNotifications(){
+    if (!('Notification' in window)){ alert('Браузер не поддерживает уведомления.'); return; }
+    if (Notification.permission === 'granted'){
+      notificationsEnabled = !notificationsEnabled;
+      try { localStorage.setItem('calendar_notify', notificationsEnabled ? 'on' : 'off'); } catch(e){}
+      updateNotifyBtn();
+      return;
+    }
+    Notification.requestPermission().then(function(perm){
+      if (perm === 'granted'){
+        notificationsEnabled = true;
+        try { localStorage.setItem('calendar_notify', 'on'); } catch(e){}
+        updateNotifyBtn();
+        try { new Notification('🌸 Напоминания включены', { body: 'За 15 минут до событий.' }); } catch(e){}
+      }
+    });
+  }
+  notifyBtn.addEventListener('click', enableNotifications);
+  updateNotifyBtn();
+
+  function parseEventTime(text){
+    var m = text.match(/(\d{1,2})\s*[:.\-]\s*(\d{2})/);
+    if (!m) return null;
+    var h = parseInt(m[1], 10);
+    var min = parseInt(m[2], 10);
+    if (h < 0 || h > 23 || min < 0 || min > 59) return null;
+    return { h: h, m: min };
+  }
+
+  var notifiedKeys = {};
+  var lastResetDay = '';
+  try {
+    var sn = localStorage.getItem('calendar_notified');
+    if (sn) notifiedKeys = JSON.parse(sn);
+    lastResetDay = localStorage.getItem('calendar_notified_day') || '';
+  } catch(e){}
+
+  function resetNotifiedIfNewDay(){
+    var now = new Date();
+    var today = now.getFullYear() + '-' + (now.getMonth()+1) + '-' + now.getDate();
+    if (lastResetDay !== today){
+      notifiedKeys = {};
+      lastResetDay = today;
+      try {
+        localStorage.setItem('calendar_notified', '{}');
+        localStorage.setItem('calendar_notified_day', today);
+      } catch(e){}
+    }
+  }
+
+  function checkReminders(){
+    if (!notificationsEnabled) return;
+    if (!('Notification' in window)) return;
+    if (Notification.permission !== 'granted') return;
+    resetNotifiedIfNewDay();
+    var now = new Date();
+    var nowMinutes = now.getHours() * 60 + now.getMinutes();
+    var todayKey = dateKey(now.getFullYear(), now.getMonth(), now.getDate());
+    var list = events[todayKey] || [];
+    list.forEach(function(text){
+      var t = parseEventTime(text);
+      if (!t) return;
+      var diff = (t.h * 60 + t.m) - nowMinutes;
+      if (diff > 0 && diff <= 15){
+        var nKey = todayKey + '|' + text;
+        if (notifiedKeys[nKey]) return;
+        notifiedKeys[nKey] = true;
+        try { localStorage.setItem('calendar_notified', JSON.stringify(notifiedKeys)); } catch(e){}
+        try { new Notification('🌸 Напоминание', { body: 'Через ' + diff + ' мин — ' + text, tag: nKey }); } catch(e){}
+      }
+    });
+  }
+
+  function pad2(n){ return String(n).padStart(2,'0'); }
+
+  function updateClock(){
+    var now = new Date();
+    var h = now.getHours();
+    var m = now.getMinutes();
+    var s = now.getSeconds();
+    clockHH.textContent = pad2(h);
+    clockMM.textContent = pad2(m);
+    clockSS.textContent = pad2(s);
+    clockAMPM.textContent = h < 12 ? 'AM' : 'PM';
+    var blink = (s % 2 === 0);
+    clockSep1.classList.toggle('off', !blink);
+    clockSep2.classList.toggle('off', !blink);
+    clockDayName.textContent = dayNamesRu[now.getDay()];
+    clockFullDate.textContent = now.getDate() + ' ' + monthNamesRuFull[now.getMonth()] + ' ' + now.getFullYear();
+    var start = new Date(now.getFullYear(), 0, 1);
+    var days = Math.floor((now - start) / (1000 * 60 * 60 * 24));
+    clockWeekdayNum.textContent = Math.ceil((days + start.getDay() + 1) / 7) + '-я неделя года';
+  }
+
+  function daysUntil(target){
+    var now = new Date();
+    var todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var targetDate;
+    if (target.recurring){
+      targetDate = new Date(todayMid.getFullYear(), target.month - 1, target.day);
+      if (targetDate < todayMid) targetDate = new Date(todayMid.getFullYear() + 1, target.month - 1, target.day);
+    } else {
+      targetDate = new Date(target.year, target.month - 1, target.day);
+    }
+    return Math.round((targetDate - todayMid) / (1000 * 60 * 60 * 24));
+  }
+
+  function updateShiftInfo(){
+    if (shiftConfig.pattern === 'off' || !shiftConfig.start){
+      shiftInfo.style.display = 'none';
+      return;
+    }
+    shiftInfo.style.display = 'block';
+    var now = new Date();
+    var todayMid = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+    var isToday = isShiftDay(now.getFullYear(), now.getMonth(), now.getDate());
+    var nextShiftDate = null;
+    for (var i = 0; i < 60; i++){
+      var d = new Date(todayMid.getTime() + i * 24 * 60 * 60 * 1000);
+      if (isShiftDay(d.getFullYear(), d.getMonth(), d.getDate())){ nextShiftDate = d; break; }
+    }
+    var pat = SHIFT_PATTERNS[shiftConfig.pattern];
+    var html = '🔥 График: <strong>' + pat.name + '</strong>';
+    if (isToday){ html += ' · <strong>Сегодня на смене!</strong>'; }
+    else if (nextShiftDate){
+      var diff = Math.round((nextShiftDate - todayMid) / (1000 * 60 * 60 * 24));
+      html += ' · Следующая смена через <strong>' + diff + ' дн.</strong> (' + nextShiftDate.getDate() + ' ' + monthShort[nextShiftDate.getMonth()] + ')';
+    }
+    shiftInfo.innerHTML = html;
+  }
+
+  function renderCountdown(){
+    countdownList.innerHTML = '';
+    var items = [];
+    countdownTargets.forEach(function(t){ items.push({ label: t.label, days: daysUntil(t) }); });
+    var todayMid = new Date(currentYear, currentMonth, currentDay);
+    var evItems = [];
+    Object.keys(events).forEach(function(key){
+      var parts = key.split('-');
+      var evDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      var days = Math.round((evDate - todayMid) / (1000 * 60 * 60 * 24));
+      if (days >= 0){
+        events[key].forEach(function(text){ evItems.push({ label: '📌 ' + text, days: days }); });
+      }
+    });
+    evItems.sort(function(a, b){ return a.days - b.days; });
+    evItems.slice(0, 3).forEach(function(it){ items.push(it); });
+    if (items.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'upcoming-empty';
+      empty.textContent = 'Нет ближайших дат';
+      countdownList.appendChild(empty);
+      return;
+    }
+    items.forEach(function(item){
+      var row = document.createElement('div');
+      row.className = 'countdown-item';
+      var lbl = document.createElement('span');
+      lbl.className = 'countdown-label';
+      lbl.textContent = item.label;
+      var val = document.createElement('span');
+      val.className = 'countdown-value';
+      if (item.days === 0){ val.textContent = 'сегодня'; val.classList.add('today'); }
+      else if (item.days === 1){ val.textContent = 'завтра'; }
+      else if (item.days <= 7){ val.textContent = 'через ' + item.days + ' дн.'; val.classList.add('soon'); }
+      else { val.textContent = 'через ' + item.days + ' дн.'; }
+      row.appendChild(lbl);
+      row.appendChild(val);
+      countdownList.appendChild(row);
+    });
+  }
+
+  function renderUpcoming(){
+    upcomingList.innerHTML = '';
+    var items = [];
+    var todayStart = new Date(currentYear, currentMonth, currentDay);
+    Object.keys(events).forEach(function(key){
+      var parts = key.split('-');
+      var evDate = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
+      var diffDays = Math.round((evDate - todayStart) / (1000 * 60 * 60 * 24));
+      if (diffDays >= 0 && diffDays <= 30){
+        events[key].forEach(function(text){ items.push({ date: evDate, text: text, diff: diffDays }); });
+      }
+    });
+    items.sort(function(a, b){ return a.date - b.date; });
+    if (items.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'upcoming-empty';
+      empty.textContent = 'Пока ничего не запланировано';
+      upcomingList.appendChild(empty);
+      return;
+    }
+    items.forEach(function(item){
+      var row = document.createElement('div');
+      row.className = 'upcoming-item';
+      var d = document.createElement('span');
+      d.className = 'upcoming-date';
+      var label;
+      if (item.diff === 0) label = 'Сегодня';
+      else if (item.diff === 1) label = 'Завтра';
+      else label = item.date.getDate() + ' ' + monthShort[item.date.getMonth()];
+      d.textContent = label;
+      var t = document.createElement('span');
+      t.className = 'upcoming-text';
+      t.textContent = item.text;
+      row.appendChild(d);
+      row.appendChild(t);
+      row.addEventListener('click', function(){
+        displayYear = item.date.getFullYear();
+        displayMonth = item.date.getMonth();
+        renderCalendar();
+        openModal(displayYear, displayMonth, item.date.getDate());
+      });
+      upcomingList.appendChild(row);
+    });
+  }
+
+  function renderCalendar(){
+    monthYearDisplay.textContent = monthNames[displayMonth] + ' ' + displayYear;
+    var firstDayOfMonth = new Date(displayYear, displayMonth, 1).getDay();
+    var startOffset = (firstDayOfMonth === 0) ? 6 : firstDayOfMonth - 1;
+    var daysInMonth = new Date(displayYear, displayMonth + 1, 0).getDate();
+    calendarGrid.innerHTML = '';
+    for (var i = 0; i < startOffset; i++){
+      var emptyCell = document.createElement('div');
+      emptyCell.className = 'day-cell empty';
+      calendarGrid.appendChild(emptyCell);
+    }
+    for (var day = 1; day <= daysInMonth; day++){
+      var dayCell = document.createElement('div');
+      dayCell.className = 'day-cell';
+      dayCell.textContent = day;
+      var dayOfWeek = new Date(displayYear, displayMonth, day).getDay();
+      if (dayOfWeek === 0 || dayOfWeek === 6) dayCell.classList.add('weekend');
+      var holidayName = getHoliday(displayYear, displayMonth, day);
+      if (holidayName){ dayCell.classList.add('holiday'); dayCell.title = holidayName; }
+      if (isShiftDay(displayYear, displayMonth, day)) dayCell.classList.add('shift');
+      if (displayYear === currentYear && displayMonth === currentMonth && day === currentDay) dayCell.classList.add('today');
+      var key = dateKey(displayYear, displayMonth, day);
+      if (events[key] && events[key].length > 0){
+        var dot = document.createElement('div');
+        dot.className = 'event-dot';
+        dayCell.appendChild(dot);
+      }
+      (function(dd){
+        dayCell.addEventListener('click', function(){ openModal(displayYear, displayMonth, dd); });
+      })(day);
+      calendarGrid.appendChild(dayCell);
+    }
+    var totalCells = startOffset + daysInMonth;
+    var remainingCells = (7 - (totalCells % 7)) % 7;
+    for (var j = 0; j < remainingCells; j++){
+      var ec = document.createElement('div');
+      ec.className = 'day-cell empty';
+      calendarGrid.appendChild(ec);
+    }
+    renderUpcoming();
+    renderCountdown();
+    updateShiftInfo();
+  }
+
+  function openModal(y, m, d){
+    activeDateKey = dateKey(y, m, d);
+    modalTitle.textContent = d + ' ' + monthNames[m].toLowerCase() + ' ' + y;
+    if (shiftConfig.pattern !== 'off' && shiftConfig.start){
+      var onShift = isShiftDay(y, m, d);
+      var pat = SHIFT_PATTERNS[shiftConfig.pattern];
+      shiftStatusInModal.innerHTML = '<div class="shift-status ' + (onShift ? 'on' : 'off') + '">' +
+        (onShift ? '🔥 Дежурство (' + pat.name + ')' : '🌙 Отдых') + '</div>';
+    } else {
+      shiftStatusInModal.innerHTML = '';
+    }
+    renderEventList();
+    eventInput.value = '';
+    modalOverlay.classList.add('active');
+    setTimeout(function(){ eventInput.focus(); }, 50);
+  }
+  function closeModal(){
+    modalOverlay.classList.remove('active');
+    activeDateKey = null;
+  }
+  function renderEventList(){
+    eventList.innerHTML = '';
+    var list = events[activeDateKey] || [];
+    if (list.length === 0){
+      var empty = document.createElement('div');
+      empty.className = 'no-events';
+      empty.textContent = 'Пока нет событий';
+      eventList.appendChild(empty);
+      return;
+    }
+    list.forEach(function(text, idx){
+      var item = document.createElement('div');
+      item.className = 'event-item';
+      var span = document.createElement('span');
+      span.textContent = text;
+      var del = document.createElement('button');
+      del.className = 'event-del';
+      del.textContent = '×';
+      del.addEventListener('click', function(){
+        events[activeDateKey].splice(idx, 1);
+        if (events[activeDateKey].length === 0) delete events[activeDateKey];
+        saveEvents();
+        renderEventList();
+        renderCalendar();
+      });
+      item.appendChild(span);
+      item.appendChild(del);
+      eventList.appendChild(item);
+    });
+  }
+  function addEvent(){
+    var text = eventInput.value.trim();
+    if (!text) { eventInput.focus(); return; }
+    if (!events[activeDateKey]) events[activeDateKey] = [];
+    events[activeDateKey].push(text);
+    saveEvents();
+    eventInput.value = '';
+    renderEventList();
+    renderCalendar();
+    eventInput.focus();
+  }
+  saveBtn.addEventListener('click', addEvent);
+  cancelBtn.addEventListener('click', closeModal);
+  eventInput.addEventListener('keydown', function(e){
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) { e.preventDefault(); addEvent(); }
+  });
+  modalOverlay.addEventListener('click', function(e){
+    if (e.target === modalOverlay) closeModal();
+  });
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){
+      if (modalOverlay.classList.contains('active')) closeModal();
+      if (shiftOverlay.classList.contains('active')) shiftOverlay.classList.remove('active');
+      if (bgOverlay.classList.contains('active')) bgOverlay.classList.remove('active');
+    }
+  });
+
+  function changeMonth(direction){
+    var newMonth = displayMonth + direction;
+    var newYear = displayYear;
+    if (newMonth < 0){ newMonth = 11; newYear--; }
+    else if (newMonth > 11){ newMonth = 0; newYear++; }
+    displayMonth = newMonth;
+    displayYear = newYear;
+    renderCalendar();
+  }
+
+  function exportEvents(){
+    var data = { version: 1, exported: new Date().toISOString(), events: events, shift: shiftConfig, bg: bgConfig };
+    var blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement('a');
+    var d = new Date();
+    var stamp = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2,'0') + '-' + String(d.getDate()).padStart(2,'0');
+    a.href = url;
+    a.download = 'calendar-backup-' + stamp + '.json';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 1000);
+  }
+
+  function importEvents(){
+    var input = document.createElement('input');
+    input.type = 'file';
+    input.accept = '.json,application/json';
+    input.style.display = 'none';
+    input.addEventListener('change', function(e){
+      var file = e.target.files[0];
+      if (!file) return;
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        try {
+          var parsed = JSON.parse(ev.target.result);
+          var imported = parsed.events || parsed;
+          if (typeof imported !== 'object' || imported === null || Array.isArray(imported)){
+            alert('Файл не похож на резервную копию.');
+            return;
+          }
+          var count = Object.keys(imported).reduce(function(sum, key){
+            return sum + (Array.isArray(imported[key]) ? imported[key].length : 0);
+          }, 0);
+          var choice = confirm('Найдено: ' + count + '.\n\nOK — ЗАМЕНИТЬ.\nОтмена — ДОБАВИТЬ.');
+          if (choice) { events = imported; }
+          else {
+            Object.keys(imported).forEach(function(key){
+              if (!events[key]) events[key] = [];
+              imported[key].forEach(function(text){
+                if (events[key].indexOf(text) === -1) events[key].push(text);
+              });
+            });
+          }
+          if (parsed.shift){ shiftConfig = parsed.shift; saveShift(); updateShiftBtn(); }
+          if (parsed.bg){ bgConfig = parsed.bg; applyBg(); }
+          saveEvents();
+          renderCalendar();
+          alert('Готово. Восстановлено: ' + count);
+        } catch(err){ alert('Ошибка: ' + err.message); }
+      };
+      reader.readAsText(file);
+    });
+    document.body.appendChild(input);
+    input.click();
+    document.body.removeChild(input);
+  }
+
+  prevBtn.addEventListener('click', function(){ changeMonth(-1); });
+  nextBtn.addEventListener('click', function(){ changeMonth(1); });
+  todayBtn.addEventListener('click', function(){
+    displayYear = currentYear;
+    displayMonth = currentMonth;
+    renderCalendar();
+  });
+  exportBtn.addEventListener('click', exportEvents);
+  importBtn.addEventListener('click', importEvents);
+
+  window.addEventListener('keydown', function(e){
+    if (modalOverlay.classList.contains('active')) return;
+    if (shiftOverlay.classList.contains('active')) return;
+    if (bgOverlay.classList.contains('active')) return;
+    if (e.key === 'ArrowLeft') changeMonth(-1);
+    else if (e.key === 'ArrowRight') changeMonth(1);
+  });
+
+  loadTheme();
+  applyBg();
+  updateShiftBtn();
+  updateClock();
+  setInterval(updateClock, 1000);
+  setInterval(checkReminders, 30000);
+  setTimeout(checkReminders, 2000);
+  renderCalendar();
+})();
+</script>
+</body>
+</html>
